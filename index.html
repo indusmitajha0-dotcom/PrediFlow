@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PrediFlow - Menstrual Health Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #fff0f3;
+      color: #3a3a3a;
+      min-height: 100vh;
+      padding: 30px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #c2185b;
+      letter-spacing: 1px;
+    }
+
+    header p {
+      color: #888;
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 12px rgba(194, 24, 91, 0.08);
+      border: 1px solid #fce4ec;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      color: #c2185b;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #fce4ec;
+      padding-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.88rem;
+      color: #666;
+      margin-bottom: 5px;
+      margin-top: 14px;
+    }
+
+    input[type="date"],
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #f8bbd0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #fff9fb;
+      color: #3a3a3a;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    input:focus {
+      border-color: #c2185b;
+    }
+
+    .symptoms-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .symptom-chip {
+      background: #fce4ec;
+      border: 1px solid #f8bbd0;
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      color: #880e4f;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      user-select: none;
+    }
+
+    .symptom-chip.selected {
+      background: #c2185b;
+      color: #ffffff;
+      border-color: #c2185b;
+    }
+
+    button.predict-btn {
+      width: 100%;
+      padding: 13px;
+      background: #c2185b;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 22px;
+      letter-spacing: 0.5px;
+      transition: background 0.2s;
+    }
+
+    button.predict-btn:hover { background: #ad1457; }
+    button.predict-btn:disabled { background: #f48fb1; cursor: not-allowed; }
+
+    .result-box { display: none; }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #fce4ec;
+      font-size: 0.93rem;
+    }
+
+    .result-row:last-child { border-bottom: none; }
+    .result-row span:first-child { color: #888; }
+    .result-row span:last-child { font-weight: 500; color: #3a3a3a; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .badge-high   { background: #e8f5e9; color: #2e7d32; }
+    .badge-medium { background: #fff8e1; color: #f57f17; }
+    .badge-low    { background: #fce4ec; color: #c62828; }
+
+    .anomaly-alert {
+      background: #fce4ec;
+      border-left: 4px solid #c2185b;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      color: #880e4f;
+      margin-top: 14px;
+      display: none;
+    }
+
+    .tips-list { list-style: none; margin-top: 10px; }
+
+    .tips-list li {
+      padding: 9px 0 9px 24px;
+      border-bottom: 1px solid #fce4ec;
+      font-size: 0.91rem;
+      color: #555;
+      position: relative;
+    }
+
+    .tips-list li::before {
+      content: "🌸";
+      position: absolute;
+      left: 0;
+      font-size: 0.8rem;
+      top: 10px;
+    }
+
+    .tips-list li:last-child { border-bottom: none; }
+
+    .phase-badge {
+      display: inline-block;
+      background: #fce4ec;
+      color: #c2185b;
+      border-radius: 20px;
+      padding: 4px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      text-transform: capitalize;
+    }
+
+    .error-msg {
+      background: #fff3f3;
+      border: 1px solid #ffcdd2;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #c62828;
+      font-size: 0.88rem;
+      margin-top: 14px;
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      color: #c2185b;
+      font-size: 0.9rem;
+      margin-top: 14px;
+      display: none;
+    }
+
+    footer {
+      text-align: center;
+      color: #bbb;
+      font-size: 0.8rem;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🌸 PrediFlow</h1>
+    <p>AI-Driven Menstrual Health Tracker</p>
+  </header>
+
+  <div class="container">
+
+    <!-- INPUT CARD -->
+    <div class="card">
+      <h2>Enter Your Cycle Details</h2>
+
+      <label>Last Period Date</label>
+      <input type="date" id="lastPeriodDate" />
+
+      <label>Average Cycle Length (days)</label>
+      <input type="number" id="cycleLength" value="28" min="15" max="60" />
+
+      <label>Period Duration (days)</label>
+      <input type="number" id="periodDuration" value="5" min="1" max="10" />
+
+      <label>Past Cycle Lengths — optional, comma separated (e.g. 27, 29, 28)</label>
+      <input type="text" id="pastCycles" placeholder="e.g. 27, 29, 28" />
+
+      <label>Symptoms — click to select</label>
+      <div class="symptoms-grid" id="symptomsGrid">
+        <span class="symptom-chip" data-value="cramps">Cramps</span>
+        <span class="symptom-chip" data-value="bloating">Bloating</span>
+        <span class="symptom-chip" data-value="fatigue">Fatigue</span>
+        <span class="symptom-chip" data-value="mood swings">Mood Swings</span>
+        <span class="symptom-chip" data-value="headache">Headache</span>
+        <span class="symptom-chip" data-value="nausea">Nausea</span>
+        <span class="symptom-chip" data-value="back pain">Back Pain</span>
+        <span class="symptom-chip" data-value="acne">Acne</span>
+        <span class="symptom-chip" data-value="breast tenderness">Breast Tenderness</span>
+        <span class="symptom-chip" data-value="severe cramps">Severe Cramps</span>
+        <span class="symptom-chip" data-value="heavy bleeding">Heavy Bleeding</span>
+        <span class="symptom-chip" data-value="spotting">Spotting</span>
+        <span class="symptom-chip" data-value="extreme fatigue">Extreme Fatigue</span>
+        <span class="symptom-chip" data-value="pelvic pain">Pelvic Pain</span>
+        <span class="symptom-chip" data-value="prolonged bleeding">Prolonged Bleeding</span>
+      </div>
+
+      <button class="predict-btn" id="predictBtn" onclick="predict()">Predict My Cycle</button>
+
+      <div class="loading" id="loading">Analysing your data... please wait</div>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <!-- PREDICTION RESULT CARD -->
+    <div class="card result-box" id="resultCard">
+      <h2>Prediction Results</h2>
+      <div class="result-row">
+        <span>Predicted Next Period</span>
+        <span id="resPredictedDate">-</span>
+      </div>
+      <div class="result-row">
+        <span>Ovulation Date</span>
+        <span id="resOvulation">-</span>
+      </div>
+      <div class="result-row">
+        <span>Fertile Window</span>
+        <span id="resFertile">-</span>
+      </div>
+      <div class="result-row">
+        <span>Cycle Length Used</span>
+        <span id="resCycleUsed">-</span>
+      </div>
+      <div class="result-row">
+        <span>Cycle Regularity</span>
+        <span id="resRegularity">-</span>
+      </div>
+      <div class="result-row">
+        <span>Confidence Level</span>
+        <span id="resConfidence">-</span>
+      </div>
+      <div class="result-row">
+        <span>Explanation</span>
+        <span id="resExplanation" style="text-align:right; max-width:60%;">-</span>
+      </div>
+      <div class="anomaly-alert" id="anomalyAlert"></div>
+    </div>
+
+    <!-- HEALTH TIPS CARD -->
+    <div class="card result-box" id="tipsCard">
+      <h2>Today's Health Tips</h2>
+      <div class="phase-badge" id="tipsPhaseBadge">-</div>
+      <p style="font-size:0.85rem; color:#aaa; margin-bottom:10px;">Cycle Day <span id="tipsCycleDay">-</span></p>
+      <ul class="tips-list" id="tipsList"></ul>
+    </div>
+
+  </div>
+
+  <footer>
+    PrediFlow v2.0 &nbsp;|&nbsp; BTech PBL Project &nbsp;|&nbsp; For educational purposes only
+  </footer>
+
+  <script>
+    // Symptom chip toggle
+    document.querySelectorAll('.symptom-chip').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    });
+
+    function getSelectedSymptoms() {
+      return [...document.querySelectorAll('.symptom-chip.selected')]
+        .map(c => c.getAttribute('data-value'));
+    }
+
+    function parsePastCycles(str) {
+      if (!str.trim()) return [];
+      return str.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    function confidenceBadge(level) {
+      const map = { High: 'badge-high', Medium: 'badge-medium', Low: 'badge-low' };
+      return `<span class="badge ${map[level] || 'badge-medium'}">${level}</span>`;
+    }
+
+    function formatRegularity(r) {
+      return { regular: 'Regular', slightly_irregular: 'Slightly Irregular', irregular: 'Irregular', insufficient_data: 'Not enough data' }[r] || r;
+    }
+
+    async function predict() {
+      hideError();
+
+      const lastPeriodDate = document.getElementById('lastPeriodDate').value;
+      const cycleLength    = parseInt(document.getElementById('cycleLength').value);
+      const periodDuration = parseInt(document.getElementById('periodDuration').value);
+      const pastCycles     = parsePastCycles(document.getElementById('pastCycles').value);
+      const symptoms       = getSelectedSymptoms();
+
+      if (!lastPeriodDate) { showError('Please enter your last period date.'); return; }
+      if (isNaN(cycleLength)) { showError('Please enter a valid cycle length.'); return; }
+
+      const btn = document.getElementById('predictBtn');
+      btn.disabled = true;
+      document.getElementById('loading').style.display = 'block';
+
+      try {
+        // --- Predict ---
+        const predictRes = await fetch('http://127.0.0.1:8000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            last_period_date: lastPeriodDate,
+            cycle_length: cycleLength,
+            period_duration: periodDuration,
+            past_cycle_lengths: pastCycles,
+            symptoms: symptoms
+          })
+        });
+
+        if (!predictRes.ok) {
+          const err = await predictRes.json();
+          const msg = err.detail?.[0]?.msg || JSON.stringify(err.detail) || 'Something went wrong.';
+          showError('Error: ' + msg);
+          return;
+        }
+
+        const data = await predictRes.json();
+
+        document.getElementById('resPredictedDate').textContent = data.predicted_next_period;
+        document.getElementById('resOvulation').textContent     = data.ovulation_date;
+        document.getElementById('resFertile').textContent       = data.fertile_window.start + ' to ' + data.fertile_window.end;
+        document.getElementById('resCycleUsed').textContent     = data.effective_cycle_length_used + ' days';
+        document.getElementById('resRegularity').textContent    = formatRegularity(data.cycle_regularity);
+        document.getElementById('resConfidence').innerHTML      = confidenceBadge(data.confidence_level);
+        document.getElementById('resExplanation').textContent   = data.explanation;
+
+        const anomalyEl = document.getElementById('anomalyAlert');
+        if (data.anomaly_detected && data.anomaly_reasons.length > 0) {
+          anomalyEl.innerHTML = '<strong>⚠️ Anomaly Detected:</strong> ' + data.anomaly_reasons.join(' | ');
+          anomalyEl.style.display = 'block';
+        } else {
+          anomalyEl.style.display = 'none';
+        }
+
+        document.getElementById('resultCard').style.display = 'block';
+
+        // --- Health Tips ---
+        const tipsRes = await fetch('http://127.0.0.1:8000/health-tips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ last_period_date: lastPeriodDate, cycle_length: cycleLength })
+        });
+
+        if (tipsRes.ok) {
+          const tips = await tipsRes.json();
+          document.getElementById('tipsPhaseBadge').textContent = tips.current_phase + ' phase';
+          document.getElementById('tipsCycleDay').textContent   = tips.current_cycle_day;
+
+          const list = document.getElementById('tipsList');
+          list.innerHTML = '';
+          tips.health_tips.forEach(tip => {
+            const li = document.createElement('li');
+            li.textContent = tip;
+            list.appendChild(li);
+          });
+
+          document.getElementById('tipsCard').style.display = 'block';
+        }
+
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+
+      } catch (e) {
+        showError('Could not connect to the backend. Make sure your server is running on http://127.0.0.1:8000');
+      } finally {
+        btn.disabled = false;
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+  </script>
+
+</body>
+</html>
