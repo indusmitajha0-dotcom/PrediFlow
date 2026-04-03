@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PrediFlow - Menstrual Health Tracker</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -120,10 +127,18 @@
       transition: background 0.2s;
     }
 
-    button.predict-btn:hover { background: #ad1457; }
-    button.predict-btn:disabled { background: #f48fb1; cursor: not-allowed; }
+    button.predict-btn:hover {
+      background: #ad1457;
+    }
 
-    .result-box { display: none; }
+    button.predict-btn:disabled {
+      background: #f48fb1;
+      cursor: not-allowed;
+    }
+
+    .result-box {
+      display: none;
+    }
 
     .result-row {
       display: flex;
@@ -134,9 +149,18 @@
       font-size: 0.93rem;
     }
 
-    .result-row:last-child { border-bottom: none; }
-    .result-row span:first-child { color: #888; }
-    .result-row span:last-child { font-weight: 500; color: #3a3a3a; }
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-row span:first-child {
+      color: #888;
+    }
+
+    .result-row span:last-child {
+      font-weight: 500;
+      color: #3a3a3a;
+    }
 
     .badge {
       display: inline-block;
@@ -146,9 +170,20 @@
       font-weight: 600;
     }
 
-    .badge-high   { background: #e8f5e9; color: #2e7d32; }
-    .badge-medium { background: #fff8e1; color: #f57f17; }
-    .badge-low    { background: #fce4ec; color: #c62828; }
+    .badge-high {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .badge-medium {
+      background: #fff8e1;
+      color: #f57f17;
+    }
+
+    .badge-low {
+      background: #fce4ec;
+      color: #c62828;
+    }
 
     .anomaly-alert {
       background: #fce4ec;
@@ -161,7 +196,10 @@
       display: none;
     }
 
-    .tips-list { list-style: none; margin-top: 10px; }
+    .tips-list {
+      list-style: none;
+      margin-top: 10px;
+    }
 
     .tips-list li {
       padding: 9px 0 9px 24px;
@@ -179,7 +217,9 @@
       top: 10px;
     }
 
-    .tips-list li:last-child { border-bottom: none; }
+    .tips-list li:last-child {
+      border-bottom: none;
+    }
 
     .phase-badge {
       display: inline-block;
@@ -220,6 +260,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -357,10 +398,10 @@
       hideError();
 
       const lastPeriodDate = document.getElementById('lastPeriodDate').value;
-      const cycleLength    = parseInt(document.getElementById('cycleLength').value);
+      const cycleLength = parseInt(document.getElementById('cycleLength').value);
       const periodDuration = parseInt(document.getElementById('periodDuration').value);
-      const pastCycles     = parsePastCycles(document.getElementById('pastCycles').value);
-      const symptoms       = getSelectedSymptoms();
+      const pastCycles = parsePastCycles(document.getElementById('pastCycles').value);
+      const symptoms = getSelectedSymptoms();
 
       if (!lastPeriodDate) { showError('Please enter your last period date.'); return; }
       if (isNaN(cycleLength)) { showError('Please enter a valid cycle length.'); return; }
@@ -371,7 +412,7 @@
 
       try {
         // --- Predict ---
-        const predictRes = await fetch('http://127.0.0.1:8000/predict', {
+        const predictRes = await fetch('https://prediflow.onrender.com/predict', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -393,12 +434,12 @@
         const data = await predictRes.json();
 
         document.getElementById('resPredictedDate').textContent = data.predicted_next_period;
-        document.getElementById('resOvulation').textContent     = data.ovulation_date;
-        document.getElementById('resFertile').textContent       = data.fertile_window.start + ' to ' + data.fertile_window.end;
-        document.getElementById('resCycleUsed').textContent     = data.effective_cycle_length_used + ' days';
-        document.getElementById('resRegularity').textContent    = formatRegularity(data.cycle_regularity);
-        document.getElementById('resConfidence').innerHTML      = confidenceBadge(data.confidence_level);
-        document.getElementById('resExplanation').textContent   = data.explanation;
+        document.getElementById('resOvulation').textContent = data.ovulation_date;
+        document.getElementById('resFertile').textContent = data.fertile_window.start + ' to ' + data.fertile_window.end;
+        document.getElementById('resCycleUsed').textContent = data.effective_cycle_length_used + ' days';
+        document.getElementById('resRegularity').textContent = formatRegularity(data.cycle_regularity);
+        document.getElementById('resConfidence').innerHTML = confidenceBadge(data.confidence_level);
+        document.getElementById('resExplanation').textContent = data.explanation;
 
         const anomalyEl = document.getElementById('anomalyAlert');
         if (data.anomaly_detected && data.anomaly_reasons.length > 0) {
@@ -411,7 +452,7 @@
         document.getElementById('resultCard').style.display = 'block';
 
         // --- Health Tips ---
-        const tipsRes = await fetch('http://127.0.0.1:8000/health-tips', {
+        const tipsRes = await fetch('https://prediflow.onrender.com/health-tips', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ last_period_date: lastPeriodDate, cycle_length: cycleLength })
@@ -420,7 +461,7 @@
         if (tipsRes.ok) {
           const tips = await tipsRes.json();
           document.getElementById('tipsPhaseBadge').textContent = tips.current_phase + ' phase';
-          document.getElementById('tipsCycleDay').textContent   = tips.current_cycle_day;
+          document.getElementById('tipsCycleDay').textContent = tips.current_cycle_day;
 
           const list = document.getElementById('tipsList');
           list.innerHTML = '';
@@ -436,7 +477,7 @@
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
 
       } catch (e) {
-        showError('Could not connect to the backend. Make sure your server is running on http://127.0.0.1:8000');
+        showError('Could not connect to the backend. Make sure your server is running on https://prediflow.onrender.com');
       } finally {
         btn.disabled = false;
         document.getElementById('loading').style.display = 'none';
@@ -445,4 +486,5 @@
   </script>
 
 </body>
+
 </html>
