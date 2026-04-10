@@ -412,7 +412,7 @@
 
       try {
         // --- Predict ---
-        const predictRes = await fetch('https://prediflow.onrender.com/predict', {
+        const predictRes = await fetch('http://127.0.0.1:8000/predict', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -452,7 +452,7 @@
         document.getElementById('resultCard').style.display = 'block';
 
         // --- Health Tips ---
-        const tipsRes = await fetch('https://prediflow.onrender.com/health-tips', {
+        const tipsRes = await fetch('http://127.0.0.1:8000/health-tips', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ last_period_date: lastPeriodDate, cycle_length: cycleLength })
@@ -477,7 +477,7 @@
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
 
       } catch (e) {
-        showError('Could not connect to the backend. Make sure your server is running on https://prediflow.onrender.com');
+        showError('Could not connect to the backend. Make sure your local server is running on http://127.0.0.1:8000');
       } finally {
         btn.disabled = false;
         document.getElementById('loading').style.display = 'none';
