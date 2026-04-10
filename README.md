@@ -1,7 +1,6 @@
 # 🌸 PrediFlow – AI-Driven Menstrual Health Tracker
 
 > BTech Project Based Learning (PBL) – Phase 2  
-> 🌐 Live Demo: https://indusmitajha0-dotcom.github.io/PrediFlow/
 > An intelligent menstrual cycle prediction system with rule-based AI, anomaly detection, and a frontend interface.
 
 ---
